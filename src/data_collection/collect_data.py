@@ -5,7 +5,7 @@ import youtube_api
 def main():
     links_file = "src/data_collection/links.txt"
     output_directory = "data/raw/music"
-    stats_file = "video_statistics.csv"
+    stats_file = "data/raw/video_statistics.csv"
 
     if not os.path.exists(links_file):
         print(f"Hata: '{links_file}' dosyası bulunamadı.")
