@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from urllib.parse import urlparse, parse_qs
+import yt_dlp
 
 # Load environment variables from .env file (looks for .env in the root directory)
 load_dotenv()
@@ -112,21 +113,24 @@ def extract_multiple_youtube_video_ids(url_list, include_none=False):
         if include_none or extract_youtube_video_id(url) is not None
     ]
 
-if __name__ == "__main__":
-    # Example list of video IDs (you would normally load these from your dataset)
-    sample_video_ids = [
-        "4NRXx6U8ABQ", # The Weeknd - Blinding Lights
-        "kJQP7kiw5Fk", # Luis Fonsi - Despacito
-        "JGwWNGJdvx8",  # Ed Sheeran - Shape of You
-    ]
+def download_music(link_list, output_dir):
     
-    bulk_stats = get_bulk_youtube_statistics(sample_video_ids)
-    
-    for vid, stats in bulk_stats.items():
-        print(f"Statistics for video ID: {stats}")
-        print(f"Video ID: {vid}")
-        print(f"  Views:    {int(stats.get('viewCount', 0)):,}")
-        print(f"  Likes:    {int(stats.get('likeCount', 0)):,}")
-        print(f"  Comments: {int(stats.get('commentCount', 0)):,}")
-        print(f"  Favorites:{int(stats.get('favoriteCount', 0)):,}")
-        print("-" * 30)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'outtmpl': f'{output_dir}/%(id)s-%(title)s.%(ext)s',
+        'quiet': False,
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            ydl.download(link_list)
+        except Exception as e:
+            print(f"Bir hata oluştu: {e}")
