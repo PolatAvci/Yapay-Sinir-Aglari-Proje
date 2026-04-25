@@ -53,7 +53,10 @@ def get_youtube_view_count(artist, song):
             'publishedAt': snippet.get('publishedAt', ''),
             'duration': content_details.get('duration', ''),
             'channelId': snippet.get('channelId', ''),
-            'title': snippet.get('title', '')
+            'title': snippet.get('title', ''),
+            'channelTitle': snippet.get('channelTitle', ''),
+            'defaultAudioLanguage': snippet.get('defaultAudioLanguage', ''),
+            'categoryId': snippet.get('categoryId', '')
         }
 
         final_data.update(stats)
@@ -95,12 +98,16 @@ def get_bulk_youtube_statistics(video_ids):
                 published_at = snippet.get('publishedAt', '')
                 duration_iso = content_details.get('duration', '')
                 channel_id = snippet.get('channelId', '')
+                default_audio_language = snippet.get('defaultAudioLanguage', '')
+                category_id = snippet.get('categoryId', '')
 
                 stats['publishedAt'] = published_at
                 stats['duration'] = duration_iso
                 stats['channelId'] = channel_id
                 stats['title'] = snippet.get('title', '')
                 stats['channelTitle'] = snippet.get('channelTitle', '')
+                stats['defaultAudioLanguage'] = default_audio_language
+                stats['categoryId'] = category_id
                 
                 video_statistics[vid_id] = stats
                 

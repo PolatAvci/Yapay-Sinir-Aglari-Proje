@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import os
 import csv
 from urllib.parse import urlparse, parse_qs
@@ -78,7 +79,8 @@ def main():
     header = [
         'video_id', 'viewCount', 'likeCount', 'favoriteCount', 'commentCount', 
         'publishedAt', 'duration', 'channelId', 'title', 'channelTitle',
-        'channelViewCount', 'channelVideoCount', 'subscriberCount'
+        'channelViewCount', 'channelVideoCount', 'subscriberCount', 'defaultAudioLanguage', 
+        'categoryId', 'scrapedAt',
     ]
 
     try:
@@ -88,9 +90,11 @@ def main():
             writer = csv.DictWriter(f, fieldnames=header)
             
             writer.writeheader()
+
+            current_time = datetime.now(timezone.utc).isoformat('T', 'seconds') + 'Z'
             
             for vid_id, stats in statistics.items():
-                row = {'video_id': vid_id}
+                row = {'video_id': vid_id, 'scrapedAt': current_time}
                 row.update(stats)
 
                 ch_id = stats.get('channelId')
