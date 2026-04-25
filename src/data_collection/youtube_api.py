@@ -152,33 +152,54 @@ def extract_multiple_youtube_video_ids(url_list, include_none=False):
         if include_none or extract_youtube_video_id(url) is not None
     ]
 
-def get_playlist_video_ids(playlist_id):
-    """Get all video IDs from a YouTube playlist."""
-    links = []
+def get_playlist_video_ids(playlist_id, max_pages=20):
+    """Get all video IDs from a YouTube playlist safely."""
+    links = set()  # For unique video links
     next_page_token = None
+    seen_tokens = set()  # For detecting loops in pagination (YouTube Mix/Radio can cause this)
+    pages_fetched = 0
     
     try:
         while True:
+            pages_fetched += 1
+            print(f"Çalma listesi çekiliyor... (Sayfa: {next_page_token or '1'})")
+            
+            if next_page_token in seen_tokens:
+                print("Uyarı: Aynı sayfa token'ı tekrar tespit edildi (YouTube Mix/Radio Döngüsü). İşlem durduruluyor.")
+                break
+                
+            if next_page_token:
+                seen_tokens.add(next_page_token)
+                
             request = youtube.playlistItems().list(
-                part='contentDetails',
+                part='contentDetails,snippet',
                 playlistId=playlist_id,
                 maxResults=50,
                 pageToken=next_page_token
             )
             response = request.execute()
             
-            for item in response.get('items', []):
+            items = response.get('items', [])
+            print(f"Bu sayfada {len(items)} video bulundu.")
+            
+            for item in items:
                 video_id = item['contentDetails']['videoId']
-                links.append(f"https://www.youtube.com/watch?v={video_id}")
+                links.add(f"https://www.youtube.com/watch?v={video_id}")
                 
             next_page_token = response.get('nextPageToken')
+            
             if not next_page_token:
                 break
                 
-        return links
+            if pages_fetched >= max_pages:
+                print(f"Uyarı: Maksimum sayfa sınırına ({max_pages}) ulaşıldı.")
+                break
+                
+        return list(links)
+        
     except Exception as e:
         print(f"Çalma listesi çekilirken hata: {e}")
-        return []
+        return list(links) # For robustness, return whatever links were collected even if an error occurs
     
 def extract_playlist_id(url_or_id):
     """
