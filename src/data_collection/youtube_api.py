@@ -34,15 +34,31 @@ def get_youtube_view_count(artist, song):
         video_id = search_response['items'][0]['id']['videoId']
         
         statistics_request = youtube.videos().list(
-            part='statistics',
+            part='statistics,snippet,contentDetails',
             id=video_id
         )
         statistics_response = statistics_request.execute()
         
-        # Sadece viewCount yerine tüm statistics objesini döndürüyoruz
-        statistics = statistics_response['items'][0].get('statistics', {})
+        if not statistics_response.get('items'):
+            return None
+
+        video_data = statistics_response['items'][0]
         
-        return statistics
+        snippet = video_data.get('snippet', {})
+        content_details = video_data.get('contentDetails', {})
+        stats = video_data.get('statistics', {})
+
+        # Verileri birleştirme
+        final_data = {
+            'publishedAt': snippet.get('publishedAt', ''),
+            'duration': content_details.get('duration', ''),
+            'channelId': snippet.get('channelId', ''),
+            'title': snippet.get('title', '')
+        }
+
+        final_data.update(stats)
+        
+        return final_data
 
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -73,11 +89,18 @@ def get_bulk_youtube_statistics(video_ids):
                 vid_id = item['id']
                 stats = item.get('statistics', {})
 
-                published_at = item.get('snippet', {}).get('publishedAt', '')
-                duration_iso = item.get('contentDetails', {}).get('duration', '')
-                
+                snippet = item.get('snippet', {})
+                content_details = item.get('contentDetails', {})
+
+                published_at = snippet.get('publishedAt', '')
+                duration_iso = content_details.get('duration', '')
+                channel_id = snippet.get('channelId', '')
+
                 stats['publishedAt'] = published_at
                 stats['duration'] = duration_iso
+                stats['channelId'] = channel_id
+                stats['title'] = snippet.get('title', '')
+                stats['channelTitle'] = snippet.get('channelTitle', '')
                 
                 video_statistics[vid_id] = stats
                 
@@ -159,6 +182,42 @@ def extract_playlist_id(url_or_id):
         parsed_url = urlparse(url_or_id)
         return parse_qs(parsed_url.query).get('list', [None])[0]
     return url_or_id.strip()
+
+def get_bulk_channel_statistics(channel_ids):
+    """
+    Fetches statistics for a list of YouTube channel IDs in bulk.
+    Automatically handles the API limit of 50 IDs per request.
+    """
+    channel_statistics = {}
+    
+    unique_channel_ids = list(set(channel_ids))
+    
+    # Split the channel_ids list into chunks of 50
+    for i in range(0, len(unique_channel_ids), 50):
+        chunk = unique_channel_ids[i:i + 50]
+        ids_string = ','.join(chunk)
+        
+        try:
+            request = youtube.channels().list(
+                part='statistics',
+                id=ids_string
+            )
+            response = request.execute()
+            
+            for item in response.get('items', []):
+                ch_id = item['id']
+                stats = item.get('statistics', {})
+
+                channel_statistics[ch_id] = {
+                    'channelViewCount': stats.get('viewCount', 0),
+                    'channelVideoCount': stats.get('videoCount', 0),
+                    'subscriberCount': stats.get('subscriberCount', 0)
+                }
+                
+        except Exception as e:
+            print(f"Kanal istatistikleri çekilirken hata oluştu: {e}")
+            
+    return channel_statistics
 
 def download_music(link_list, output_dir):
     

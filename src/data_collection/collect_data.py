@@ -69,7 +69,17 @@ def main():
 
     statistics = youtube_api.get_bulk_youtube_statistics(video_ids)
 
-    header = ['video_id', 'viewCount', 'likeCount', 'favoriteCount', 'commentCount', 'publishedAt', 'duration']
+    channel_ids = [stats.get('channelId') for stats in statistics.values() if stats.get('channelId')]
+    
+    print(f"{len(set(channel_ids))} adet benzersiz kanalın istatistikleri çekiliyor...")
+
+    channel_statistics = youtube_api.get_bulk_channel_statistics(channel_ids)
+
+    header = [
+        'video_id', 'viewCount', 'likeCount', 'favoriteCount', 'commentCount', 
+        'publishedAt', 'duration', 'channelId', 'title', 'channelTitle',
+        'channelViewCount', 'channelVideoCount', 'subscriberCount'
+    ]
 
     try:
         os.makedirs(os.path.dirname(stats_file), exist_ok=True)
@@ -82,6 +92,10 @@ def main():
             for vid_id, stats in statistics.items():
                 row = {'video_id': vid_id}
                 row.update(stats)
+
+                ch_id = stats.get('channelId')
+                if ch_id and ch_id in channel_statistics:
+                    row.update(channel_statistics[ch_id])
                 
                 # Add only the keys that are in the header, missing keys will default to 0
                 filtered_row = {key: row.get(key, 0) for key in header}
