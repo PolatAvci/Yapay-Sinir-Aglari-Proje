@@ -63,7 +63,7 @@ def get_bulk_youtube_statistics(video_ids):
         
         try:
             request = youtube.videos().list(
-                part='statistics',
+                part='statistics,snippet,contentDetails',
                 id=ids_string
             )
             response = request.execute()
@@ -72,6 +72,13 @@ def get_bulk_youtube_statistics(video_ids):
             for item in response.get('items', []):
                 vid_id = item['id']
                 stats = item.get('statistics', {})
+
+                published_at = item.get('snippet', {}).get('publishedAt', '')
+                duration_iso = item.get('contentDetails', {}).get('duration', '')
+                
+                stats['publishedAt'] = published_at
+                stats['duration'] = duration_iso
+                
                 video_statistics[vid_id] = stats
                 
         except Exception as e:

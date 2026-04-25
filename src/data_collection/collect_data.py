@@ -69,7 +69,7 @@ def main():
 
     statistics = youtube_api.get_bulk_youtube_statistics(video_ids)
 
-    header = ['video_id', 'viewCount', 'likeCount', 'favoriteCount', 'commentCount']
+    header = ['video_id', 'viewCount', 'likeCount', 'favoriteCount', 'commentCount', 'publishedAt', 'duration']
 
     try:
         os.makedirs(os.path.dirname(stats_file), exist_ok=True)
