@@ -81,8 +81,10 @@ def get_bulk_youtube_statistics(video_ids):
 
 def extract_youtube_video_id(url):
     """
-    Verilen YouTube URL'sinden video ID'sini güvenli bir şekilde çıkarır.
-    Süre (&t=), oynatma listesi (&list=) gibi ekstra parametreleri yoksayar.
+    Extracts the YouTube video ID from a given URL. Supports various YouTube URL formats, including:
+    - https://www.youtube.com/watch?v=ID
+    - https://www.youtube.com/embed/ID
+    - https://youtu.be/ID
     """
     parsed_url = urlparse(url)
     
@@ -113,21 +115,64 @@ def extract_multiple_youtube_video_ids(url_list, include_none=False):
         if include_none or extract_youtube_video_id(url) is not None
     ]
 
+def get_playlist_video_ids(playlist_id):
+    """Get all video IDs from a YouTube playlist."""
+    links = []
+    next_page_token = None
+    
+    try:
+        while True:
+            request = youtube.playlistItems().list(
+                part='contentDetails',
+                playlistId=playlist_id,
+                maxResults=50,
+                pageToken=next_page_token
+            )
+            response = request.execute()
+            
+            for item in response.get('items', []):
+                video_id = item['contentDetails']['videoId']
+                links.append(f"https://www.youtube.com/watch?v={video_id}")
+                
+            next_page_token = response.get('nextPageToken')
+            if not next_page_token:
+                break
+                
+        return links
+    except Exception as e:
+        print(f"Çalma listesi çekilirken hata: {e}")
+        return []
+    
+def extract_playlist_id(url_or_id):
+    """
+    User may have entered either a full playlist URL or just the playlist ID in the playlist_links.txt file.
+    This function handles both cases and returns just the Playlist ID.
+    """
+    if "list=" in url_or_id:
+        parsed_url = urlparse(url_or_id)
+        return parse_qs(parsed_url.query).get('list', [None])[0]
+    return url_or_id.strip()
+
 def download_music(link_list, output_dir):
     
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
     ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': f'{output_dir}/%(id)s-%(title)s.%(ext)s',
-        'quiet': False,
-    }
+            'format': 'bestaudio/best',
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+            'outtmpl': f'{output_dir}/%(id)s-%(title)s.%(ext)s',
+            'quiet': False,
+            
+            'sleep_interval': 4,
+            'max_sleep_interval': 9,
+            'download_archive': 'downloaded_archive.txt',
+            'ignoreerrors': True,
+        }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
