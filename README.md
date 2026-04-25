@@ -1,15 +1,17 @@
-# Yapay Sinir Ağları Projesi - Veri Toplama Modülü
+# Yapay Sinir Ağları Projesi
 
-Bu proje, yapay sinir ağları projeleri için YouTube üzerinden müzik verisi ve bu videolara ait istatistiksel metadataları otomatik olarak toplayan bir Python aracıdır.
+## Veri Toplama Modülü
+Bu modül, YouTube üzerinden müzik verisi ve bu videolara ait istatistiksel metadataları otomatik olarak toplayan bir Python aracıdır.
 
-## Özellikler
+### Özellikler
 
 - Belirtilen YouTube linklerinden videoları en iyi ses kalitesinde (mp3 formatında) indirir.
 - YouTube Data API v3 kullanarak indirilen videolara ait istatistikleri (izlenme sayısı, beğeni sayısı, favori sayısı, yorum sayısı) çeker.
 - İstatistik verilerini toplu olarak (bulk) ve hızlı bir şekilde alır.
+- Link bulunmaması durumunda playlist linklerinden müzik linklerini alır.
 - Çekilen istatistikleri bir CSV dosyasına kaydeder.
 
-## Proje Yapısı
+### Proje Yapısı
 
 ```
 Yapay-Sinir-Aglari-Proje/
@@ -19,19 +21,20 @@ Yapay-Sinir-Aglari-Proje/
 │
 └── src/
     └── data_collection/
-        ├── collect_data.py # Ana veri toplama ve indirme betiği
-        ├── youtube_api.py  # YouTube API ve indirme işlemlerini yöneten yardımcı modül
-        └── links.txt       # İndirilecek YouTube linklerinin listesi
+        ├── collect_data.py        # Ana veri toplama ve indirme betiği
+        ├── youtube_api.py         # YouTube API ve indirme işlemlerini yöneten yardımcı modül
+        ├── playlist_links.txt     # Link bulunmaması durumunda linklerin elde edileceği playlist link listesi
+        └── music_links.txt        # İndirilecek YouTube linklerinin listesi
 ```
 
-## Gereksinimler
+### Gereksinimler
 
 Bu projeyi çalıştırabilmek için bilgisayarınızda [Python](https://www.python.org/downloads/) yüklü olmalıdır. Ek olarak, bir YouTube Data API v3 anahtarına ihtiyacınız vardır.
 
 - Python 3.7+
 - FFmpeg (Ses dosyalarını mp3'e çevirmek için yt-dlp tarafından gereklidir)
 
-## Kurulum
+### Kurulum
 
 1. **Depoyu klonlayın veya indirin:**
    ```bash
@@ -56,16 +59,16 @@ Bu projeyi çalıştırabilmek için bilgisayarınızda [Python](https://www.pyt
    YOUTUBE_API_KEY=sizin_api_anahtariniz_buraya
    ```
 
-## Kullanım
+### Kullanım
 
-1. `src/data_collection/links.txt` dosyasını açın ve her satıra bir tane gelecek şekilde indirmek istediğiniz YouTube linklerini ekleyin.
+1. `src/data_collection/music_links.txt` veya `src/data_collection/playlist_links.txt` dosyasını açın ve her satıra bir tane gelecek şekilde indirmek istediğiniz müziğin veya playlistin YouTube linklerini ekleyin.
 
 2. Veri toplama betiğini çalıştırın:
    ```bash
    python src/data_collection/collect_data.py
    ```
 
-## Çıktılar
+### Çıktılar
 
 - **Ses Dosyaları:** İndirilen ses dosyaları `data/raw/music/` dizinine kaydedilir.
-- **İstatistikler:** Çekilen video istatistikleri `data/raw/` dizinindeki `video_statistics.csv` dosyasına kaydedilir.
+- **İstatistikler:** Çekilen video istatistikleri `data/raw/` dizinindeki `music_statistics.csv` dosyasına kaydedilir.

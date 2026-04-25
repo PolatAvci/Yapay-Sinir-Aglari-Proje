@@ -8,7 +8,7 @@ def main():
     links_file = "src/data_collection/music_links.txt"
     playlist_file = "src/data_collection/playlist_links.txt"
     output_directory = "data/raw/music"
-    stats_file = "data/raw/video_statistics.csv"
+    stats_file = "data/raw/music_statistics.csv"
 
     links = []
     if os.path.exists(links_file):
